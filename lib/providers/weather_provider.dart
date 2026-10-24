@@ -71,13 +71,16 @@ class WeatherProvider extends ChangeNotifier {
         lon = loc.longitude;
       }
 
-      _weather = await WeatherService.fetchWeather(
+      final newWeather = await WeatherService.fetchWeather(
         latitude: lat,
         longitude: lon,
         provider: _providerName,
         apiToken: _apiToken,
         city: _city,
       );
+      if (newWeather != null) {
+        _weather = newWeather;
+      }
     } catch (_) {
     } finally {
       _isLoading = false;

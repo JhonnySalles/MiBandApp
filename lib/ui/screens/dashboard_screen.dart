@@ -111,6 +111,25 @@ class DashboardScreen extends StatelessWidget {
                         },
                   icon: const Icon(Icons.vibration_rounded, color: AppTheme.healthCyan),
                 ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppTheme.cardSubtle,
+                    padding: const EdgeInsets.all(14),
+                  ),
+                  tooltip: "Parar vibração",
+                  onPressed: deviceProv.device == null
+                      ? null
+                      : () async {
+                          final ok = await deviceProv.stopVibrate();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(ok ? "Comando de parar vibração enviado!" : "Falha ao interromper")),
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.stop_circle_outlined, color: AppTheme.heartRed),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -152,6 +171,57 @@ class DashboardScreen extends StatelessWidget {
               subtitle: deviceProv.device?.lastSyncTime != null
                   ? "Última sincronização: ${deviceProv.device!.lastSyncTime!.hour.toString().padLeft(2, '0')}:${deviceProv.device!.lastSyncTime!.minute.toString().padLeft(2, '0')}"
                   : "Não sincronizado hoje",
+            ),
+            const SizedBox(height: 12),
+
+            MetricCard(
+              icon: Icons.bloodtype_rounded,
+              iconColor: const Color(0xFF00E5FF),
+              title: "Oxigênio no Sangue (SpO2)",
+              value: activity?.spo2 != null ? "${activity!.spo2}" : "--",
+              unit: "%",
+              subtitle: activity?.spo2 != null ? "Saturação normal em repouso" : "Acione para medir saturação",
+              trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.cardSubtle,
+                  foregroundColor: const Color(0xFF00E5FF),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                ),
+                onPressed: (isSyncing || deviceProv.device == null)
+                    ? null
+                    : () async {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Medindo SpO2... Mantenha o braço imóvel por ~15s")),
+                        );
+                        final val = await deviceProv.measureSpo2();
+                        if (val != null && activity != null) {
+                          activityProv.updateActivity(activity.copyWith(spo2: val));
+                        }
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(val != null ? "SpO2 aferido: $val%" : "Não foi possível obter SpO2 no momento")),
+                          );
+                        }
+                      },
+                child: const Text("Medir", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            MetricCard(
+              icon: Icons.psychology_rounded,
+              iconColor: AppTheme.stressPurple,
+              title: "Nível de Estresse (HRV)",
+              value: activity?.stress != null ? "${activity!.stress}" : "--",
+              unit: "/100",
+              subtitle: () {
+                final s = activity?.stress;
+                if (s == null) return "Calculado a partir da variabilidade cardíaca (HRV)";
+                if (s < 30) return "Relaxado";
+                if (s < 60) return "Normal";
+                if (s < 80) return "Médio";
+                return "Alto";
+              }(),
             ),
             const SizedBox(height: 16),
 

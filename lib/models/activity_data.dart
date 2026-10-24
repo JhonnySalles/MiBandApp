@@ -7,6 +7,8 @@ class ActivityData {
   final int calories;
   final int? heartRate;
   final int? batteryLevel;
+  final int? spo2;
+  final int? stress;
 
   ActivityData({
     this.id,
@@ -17,6 +19,8 @@ class ActivityData {
     this.calories = 0,
     this.heartRate,
     this.batteryLevel,
+    this.spo2,
+    this.stress,
   });
 
   double get distanceKm => distanceMeters / 1000.0;
@@ -31,6 +35,8 @@ class ActivityData {
       'calories': calories,
       'heart_rate': heartRate,
       'battery_level': batteryLevel,
+      'spo2': spo2,
+      'stress': stress,
     };
   }
 
@@ -44,6 +50,34 @@ class ActivityData {
       calories: map['calories'] as int? ?? 0,
       heartRate: map['heart_rate'] as int?,
       batteryLevel: map['battery_level'] as int?,
+      spo2: map['spo2'] as int?,
+      stress: map['stress'] as int?,
+    );
+  }
+
+  ActivityData copyWith({
+    int? id,
+    String? deviceMac,
+    DateTime? timestamp,
+    int? steps,
+    int? distanceMeters,
+    int? calories,
+    int? heartRate,
+    int? batteryLevel,
+    int? spo2,
+    int? stress,
+  }) {
+    return ActivityData(
+      id: id ?? this.id,
+      deviceMac: deviceMac ?? this.deviceMac,
+      timestamp: timestamp ?? this.timestamp,
+      steps: steps ?? this.steps,
+      distanceMeters: distanceMeters ?? this.distanceMeters,
+      calories: calories ?? this.calories,
+      heartRate: heartRate ?? this.heartRate,
+      batteryLevel: batteryLevel ?? this.batteryLevel,
+      spo2: spo2 ?? this.spo2,
+      stress: stress ?? this.stress,
     );
   }
 }

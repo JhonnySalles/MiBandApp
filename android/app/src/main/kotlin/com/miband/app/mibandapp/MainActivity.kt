@@ -32,7 +32,7 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "generateEcdhKeys" -> {
                     try {
-                        val x9 = SECNamedCurves.getByName("sect163r1")
+                        val x9 = SECNamedCurves.getByName("sect163r2")
                         val domainParams = ECDomainParameters(x9.curve, x9.g, x9.n, x9.h)
                         val generator = ECKeyPairGenerator()
                         generator.init(ECKeyGenerationParameters(domainParams, SecureRandom()))
@@ -41,10 +41,10 @@ class MainActivity : FlutterActivity() {
                         val priv = keyPair.private as ECPrivateKeyParameters
                         val pub = keyPair.public as ECPublicKeyParameters
 
-                        val privBytes = toByteArrayPadded(priv.d, 24)
-                        val pubX = toByteArrayPadded(pub.q.affineXCoord.toBigInteger(), 24)
-                        val pubY = toByteArrayPadded(pub.q.affineYCoord.toBigInteger(), 24)
-                        val pubBytes = pubX + pubY // 48 bytes uncompressed X+Y
+                        val privBytes = toLittleEndianBytes(priv.d, 24)
+                        val pubX = toLittleEndianBytes(pub.q.affineXCoord.toBigInteger(), 24)
+                        val pubY = toLittleEndianBytes(pub.q.affineYCoord.toBigInteger(), 24)
+                        val pubBytes = pubX + pubY // 48 bytes uncompressed X+Y em Little-Endian
 
                         result.success(mapOf(
                             "privateKey" to bytesToHex(privBytes),
@@ -62,18 +62,20 @@ class MainActivity : FlutterActivity() {
                         val privBytes = hexToBytes(privHex)
                         val pubBytes = hexToBytes(pubHex)
 
-                        val x9 = SECNamedCurves.getByName("sect163r1")
+                        val x9 = SECNamedCurves.getByName("sect163r2")
                         val domainParams = ECDomainParameters(x9.curve, x9.g, x9.n, x9.h)
 
-                        val privD = BigInteger(1, privBytes)
+                        val privD = fromLittleEndianBytes(privBytes)
                         val xBytes = pubBytes.copyOfRange(0, 24)
                         val yBytes = pubBytes.copyOfRange(24, 48)
-                        val pubPoint = x9.curve.createPoint(BigInteger(1, xBytes), BigInteger(1, yBytes))
+                        val pubX = fromLittleEndianBytes(xBytes)
+                        val pubY = fromLittleEndianBytes(yBytes)
+                        val pubPoint = x9.curve.createPoint(pubX, pubY)
 
                         val sharedPoint = pubPoint.multiply(privD).normalize()
-                        val secX = toByteArrayPadded(sharedPoint.affineXCoord.toBigInteger(), 24)
-                        val secY = toByteArrayPadded(sharedPoint.affineYCoord.toBigInteger(), 24)
-                        val secBytes = secX + secY // 48 bytes X+Y
+                        val secX = toLittleEndianBytes(sharedPoint.affineXCoord.toBigInteger(), 24)
+                        val secY = toLittleEndianBytes(sharedPoint.affineYCoord.toBigInteger(), 24)
+                        val secBytes = secX + secY // 48 bytes X+Y em Little-Endian
 
                         result.success(mapOf(
                             "sharedSecret" to bytesToHex(secBytes)
@@ -87,15 +89,27 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun toByteArrayPadded(bi: BigInteger, length: Int): ByteArray {
-        val b = bi.toByteArray()
-        val res = ByteArray(length)
-        if (b.size >= length) {
-            System.arraycopy(b, b.size - length, res, 0, length)
+    private fun toLittleEndianBytes(bi: BigInteger, length: Int): ByteArray {
+        val bigEndian = bi.toByteArray()
+        val trimmed = if (bigEndian.isNotEmpty() && bigEndian[0].toInt() == 0) {
+            bigEndian.copyOfRange(1, bigEndian.size)
         } else {
-            System.arraycopy(b, 0, res, length - b.size, b.size)
+            bigEndian
+        }
+        val res = ByteArray(length)
+        val copyLen = minOf(trimmed.size, length)
+        for (i in 0 until copyLen) {
+            res[i] = trimmed[trimmed.size - 1 - i]
         }
         return res
+    }
+
+    private fun fromLittleEndianBytes(leBytes: ByteArray): BigInteger {
+        val beBytes = ByteArray(leBytes.size)
+        for (i in leBytes.indices) {
+            beBytes[i] = leBytes[leBytes.size - 1 - i]
+        }
+        return BigInteger(1, beBytes)
     }
 
     private fun bytesToHex(bytes: ByteArray): String {

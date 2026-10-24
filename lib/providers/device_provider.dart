@@ -84,8 +84,90 @@ class DeviceProvider extends ChangeNotifier {
     return await BleService.instance.triggerVibrate(_device!);
   }
 
+  Future<bool> stopVibrate() async {
+    if (_device == null) return false;
+    return await BleService.instance.stopVibrate(_device!);
+  }
+
   Future<bool> sendNotification(String title, String text) async {
     if (_device == null) return false;
     return await BleService.instance.sendNotification(_device!, title, text);
+  }
+
+  Future<bool> setHeartRateInterval(int minutes) async {
+    if (_device == null) return false;
+    return await BleService.instance.setHeartRateInterval(_device!, minutes);
+  }
+
+  Future<bool> setFitnessGoals({int stepGoal = 10000, int calorieGoal = 300}) async {
+    if (_device == null) return false;
+    return await BleService.instance.setFitnessGoals(_device!, stepGoal: stepGoal, calorieGoal: calorieGoal);
+  }
+
+  Future<bool> setStressMonitoring({bool enabled = true, int intervalMinutes = 5}) async {
+    if (_device == null) return false;
+    return await BleService.instance.setStressMonitoring(_device!, enabled: enabled, intervalMinutes: intervalMinutes);
+  }
+
+  Future<Map<String, String>?> readDeviceInfo() async {
+    if (_device == null) return null;
+    return await BleService.instance.readDeviceInfo(_device!);
+  }
+
+  Future<Map<String, dynamic>?> readBatteryDetails() async {
+    if (_device == null) return null;
+    return await BleService.instance.readBatteryDetails(_device!);
+  }
+
+  Future<Map<String, dynamic>?> readBandTime() async {
+    if (_device == null) return null;
+    return await BleService.instance.readBandTime(_device!);
+  }
+
+  Future<int?> measureSpo2() async {
+    if (_device == null) return null;
+    return await BleService.instance.measureSpo2(_device!);
+  }
+
+  Future<bool> setWearLocation({bool rightWrist = false}) async {
+    if (_device == null) return false;
+    return await BleService.instance.setWearLocation(_device!, rightWrist: rightWrist);
+  }
+
+  Future<bool> setLiftWrist({
+    String mode = "all_day",
+    String startTime = "07:00",
+    String endTime = "22:00",
+    bool fastSpeed = false,
+  }) async {
+    if (_device == null) return false;
+    return await BleService.instance.setLiftWrist(
+      _device!,
+      mode: mode,
+      startTime: startTime,
+      endTime: endTime,
+      fastSpeed: fastSpeed,
+    );
+  }
+
+  Future<bool> setNightMode({
+    String mode = "sunset",
+    String startTime = "22:00",
+    String endTime = "07:00",
+    String dndMode = "smart",
+  }) async {
+    if (_device == null) return false;
+    return await BleService.instance.setNightMode(
+      _device!,
+      mode: mode,
+      startTime: startTime,
+      endTime: endTime,
+      dndMode: dndMode,
+    );
+  }
+
+  Future<bool> setBandLanguage(String languageCode) async {
+    if (_device == null) return false;
+    return await BleService.instance.setBandLanguage(_device!, languageCode);
   }
 }

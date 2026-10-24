@@ -5,8 +5,8 @@ import 'package:pointycastle/export.dart';
 class HuamiCryptoService {
   static const MethodChannel _cryptoChannel = MethodChannel('com.miband.app/crypto');
 
-  /// Gera par de chaves ECDH na curva sect163r1 (Huami 2021)
-  /// Retorna: { 'privateKey': Uint8List (24 bytes), 'publicKey': Uint8List (48 bytes) }
+  /// Gera par de chaves ECDH na curva sect163r2 (NIST B-163 - Huami 2021)
+  /// Retorna: { 'privateKey': Uint8List (24 bytes Little-Endian), 'publicKey': Uint8List (48 bytes Little-Endian) }
   static Future<Map<String, Uint8List>> generateEcdhKeys() async {
     try {
       final res = await _cryptoChannel.invokeMapMethod<String, dynamic>('generateEcdhKeys');
@@ -16,18 +16,16 @@ class HuamiCryptoService {
           'publicKey': _hexToBytes(res['publicKey'] as String),
         };
       }
+      throw StateError("Canal nativo não retornou as chaves ECDH esperadas");
     } on MissingPluginException {
-      // Fallback em ambientes sem o plugin nativo (ex: testes)
-      return _generateMockKeys();
+      throw UnsupportedError("Plugin nativo de criptografia ECDH B-163 não está disponível nesta plataforma");
     } catch (e) {
-      // Se falhar o canal nativo, gera fallback seguro
-      return _generateMockKeys();
+      throw StateError("Falha ao gerar chaves ECDH B-163 nativas: $e");
     }
-    return _generateMockKeys();
   }
 
   /// Calcula o segredo compartilhado ECDH B-163 entre a chave privada local e a chave pública remota
-  /// Retorna: Uint8List (48 bytes)
+  /// Retorna: Uint8List (48 bytes Little-Endian)
   static Future<Uint8List> computeSharedSecret(Uint8List privateKey, Uint8List remotePublicKey) async {
     try {
       final res = await _cryptoChannel.invokeMapMethod<String, dynamic>('computeSharedSecret', {
@@ -37,12 +35,12 @@ class HuamiCryptoService {
       if (res != null && res.containsKey('sharedSecret')) {
         return _hexToBytes(res['sharedSecret'] as String);
       }
+      throw StateError("Canal nativo não retornou o segredo compartilhado ECDH");
     } on MissingPluginException {
-      return _generateMockSecret(privateKey, remotePublicKey);
+      throw UnsupportedError("Plugin nativo de criptografia ECDH B-163 não está disponível nesta plataforma");
     } catch (e) {
-      return _generateMockSecret(privateKey, remotePublicKey);
+      throw StateError("Falha ao computar segredo compartilhado ECDH B-163 nativo: $e");
     }
-    return _generateMockSecret(privateKey, remotePublicKey);
   }
 
   /// Deriva a session_key de 16 bytes a partir do segredo ECDH e da authKey do usuário
@@ -111,23 +109,6 @@ class HuamiCryptoService {
   static String _bytesToHex(Uint8List bytes) {
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
-
-  static Map<String, Uint8List> _generateMockKeys() {
-    final priv = Uint8List(24);
-    final pub = Uint8List(48);
-    for (int i = 0; i < 24; i++) {
-      priv[i] = (i * 17 + 3) & 0xFF;
-      pub[i] = (i * 29 + 7) & 0xFF;
-      pub[i + 24] = (i * 31 + 13) & 0xFF;
-    }
-    return {'privateKey': priv, 'publicKey': pub};
-  }
-
-  static Uint8List _generateMockSecret(Uint8List priv, Uint8List pub) {
-    final sec = Uint8List(48);
-    for (int i = 0; i < 48; i++) {
-      sec[i] = (pub[i] ^ (priv[i % 24])) & 0xFF;
-    }
-    return sec;
-  }
 }
+
+

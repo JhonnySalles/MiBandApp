@@ -50,10 +50,49 @@ class _AlarmsScreenState extends State<AlarmsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text("Alarmes da Pulseira", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              IconButton.filled(
-                style: IconButton.styleFrom(backgroundColor: AppTheme.primaryOrange),
-                icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-                onPressed: () => _showAddAlarmDialog(context, alarmProv),
+              Row(
+                children: [
+                  if (alarmProv.isSyncingAlarms)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryOrange)),
+                    )
+                  else ...[
+                    IconButton(
+                      tooltip: "Ler da pulseira",
+                      icon: const Icon(Icons.download_rounded, color: AppTheme.healthCyan),
+                      onPressed: devProv.device == null
+                          ? null
+                          : () async {
+                              final ok = await alarmProv.readAlarmsFromBand(devProv.device!);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(ok ? "Alarmes lidos com sucesso da pulseira!" : "Nenhum alarme obtido")),
+                                );
+                              }
+                            },
+                    ),
+                    IconButton(
+                      tooltip: "Gravar na pulseira",
+                      icon: const Icon(Icons.upload_rounded, color: AppTheme.primaryOrange),
+                      onPressed: devProv.device == null
+                          ? null
+                          : () async {
+                              final ok = await alarmProv.sendAlarmsToBand(devProv.device!);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(ok ? "Alarmes gravados e sincronizados com a Mi Band!" : "Falha ao gravar alarmes")),
+                                );
+                              }
+                            },
+                    ),
+                  ],
+                  IconButton.filled(
+                    style: IconButton.styleFrom(backgroundColor: AppTheme.primaryOrange),
+                    icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                    onPressed: () => _showAddAlarmDialog(context, alarmProv),
+                  ),
+                ],
               ),
             ],
           ),

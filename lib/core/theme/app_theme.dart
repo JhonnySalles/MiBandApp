@@ -7,6 +7,7 @@ class AppTheme {
   static const Color heartRed = Color(0xFFFF334B);
   static const Color healthCyan = Color(0xFF00D2B4);
   static const Color batteryGreen = Color(0xFF00E676);
+  static const Color stressPurple = Color(0xFF9C27B0);
 
   static const Color darkBackground = Color(0xFF121418);
   static const Color cardBackground = Color(0xFF1E222A);

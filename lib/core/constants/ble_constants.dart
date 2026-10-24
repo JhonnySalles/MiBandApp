@@ -25,6 +25,8 @@ class BleConstants {
   static const String uuidCharBatteryLegacy = "00000006-0000-3512-2118-0009af100700";
   static const String uuidCharBatteryStandard = "00002a19-0000-1000-8000-00805f9b34fb";
   static const String uuidCharCurrentTime = "00002a2b-0000-1000-8000-00805f9b34fb";
+  static const String uuidCharActivityData = "00000004-0000-3512-2118-0009af100700";
+  static const String uuidCharActivityControl = "00000005-0000-3512-2118-0009af100700";
 
   // Standard BLE Heart Rate Service
   static const String uuidServiceHeartRate = "0000180d-0000-1000-8000-00805f9b34fb";

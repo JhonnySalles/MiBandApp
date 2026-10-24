@@ -4,10 +4,13 @@ class AlarmItem {
   final bool enabled;
   final int repetition; // bitmask: Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64, Once=128
 
+  final bool snooze;
+
   AlarmItem({
     required this.index,
     required this.time,
     required this.enabled,
+    this.snooze = true,
     this.repetition = 128, // Once default
   });
 
@@ -43,6 +46,7 @@ class AlarmItem {
       'index': index,
       'time': time,
       'enabled': enabled ? 1 : 0,
+      'snooze': snooze ? 1 : 0,
       'repetition': repetition,
     };
   }
@@ -52,6 +56,7 @@ class AlarmItem {
       index: map['index'] as int? ?? 0,
       time: map['time'] as String? ?? '07:00',
       enabled: (map['enabled'] as int? ?? 1) == 1,
+      snooze: (map['snooze'] as int? ?? 1) == 1,
       repetition: map['repetition'] as int? ?? 128,
     );
   }
@@ -60,12 +65,14 @@ class AlarmItem {
     int? index,
     String? time,
     bool? enabled,
+    bool? snooze,
     int? repetition,
   }) {
     return AlarmItem(
       index: index ?? this.index,
       time: time ?? this.time,
       enabled: enabled ?? this.enabled,
+      snooze: snooze ?? this.snooze,
       repetition: repetition ?? this.repetition,
     );
   }

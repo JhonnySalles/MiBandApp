@@ -24,8 +24,18 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          try {
+            await db.execute('ALTER TABLE activity_log ADD COLUMN spo2 INTEGER;');
+          } catch (_) {}
+          try {
+            await db.execute('ALTER TABLE activity_log ADD COLUMN stress INTEGER;');
+          } catch (_) {}
+        }
+      },
     );
   }
 
@@ -54,7 +64,9 @@ class AppDatabase {
         distance_meters INTEGER NOT NULL DEFAULT 0,
         calories INTEGER NOT NULL DEFAULT 0,
         heart_rate INTEGER,
-        battery_level INTEGER
+        battery_level INTEGER,
+        spo2 INTEGER,
+        stress INTEGER
       )
     ''');
 
